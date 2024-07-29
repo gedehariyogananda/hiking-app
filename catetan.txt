@@ -1,0 +1,19 @@
+run => npm init (buat project)
+npm run start (build template nodemon sudah ada)
+npm run ... sesuai command script
+
+sequelized -> package untuk model migrate seder
+
+how to run command sequelize ? 
+- npx sequelize-cli init (awal2 buat sequelized) 
+- npx sequelize-cli model ...
+berikut inpo banyak command nya : 
+https://chatgpt.com/share/8383cf47-29e5-426e-acbb-66752d232ccd
+
+misal buat model User dengan pasti migration nya juga : 
+npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
+
+jika ada relasi ? 
+harus menggunakan canelCase contoh : userId (agar mudah relatitionship)
+
+
