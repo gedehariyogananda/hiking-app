@@ -1,4 +1,4 @@
-const formatPrices = (price) => {
+const formatPricese = (price) => {
     return 'Rp. ' + price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
@@ -8,6 +8,6 @@ const replaceFormatRp = (price) => {
 
 
 module.exports = {
-    formatPrices,
+    formatPricese,
     replaceFormatRp
 }

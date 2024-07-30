@@ -14,21 +14,21 @@ Route.post('/login', login);
 Route.post('/logout', AuthMiddleware.checkAuth,logout);
 
 // product API
-Route.get('/products',AuthMiddleware.checkAuth, getAllProduct);
-Route.get('/products/search',AuthMiddleware.checkAuth, searchProductByName);
-Route.get('/products/:id', AuthMiddleware.checkAuth,getProductById);
-Route.get('/products/category/tenda', AuthMiddleware.checkAuth,getProductCategoryTenda);
-Route.get('/products/category/alat-camping', AuthMiddleware.checkAuth,getProductCategoryAlatCamping);
-Route.get('/products/category/lainnya',AuthMiddleware.checkAuth, getProductCategoryLainnya);
-Route.get('/products/category/rekomendasi', AuthMiddleware.checkAuth,getProductCategoryRekomendasi);
+Route.get('/products', getAllProduct);
+Route.get('/products/search', searchProductByName);
+Route.get('/products/:id', getProductById);
+Route.get('/products/category/tenda',getProductCategoryTenda);
+Route.get('/products/category/alat-camping',getProductCategoryAlatCamping);
+Route.get('/products/category/lainnya' ,getProductCategoryLainnya);
+Route.get('/products/category/rekomendasi',getProductCategoryRekomendasi);
 
 // favorit API 
 Route.get('/favorit', AuthMiddleware.checkAuth, getFavoritProductUser);
 Route.post('/favorit', AuthMiddleware.checkAuth, setFavoritProductUser);
-Route.delete('/favorit', AuthMiddleware.checkAuth, deleteFavoritProductUser);
+Route.delete('/favorit/:id', AuthMiddleware.checkAuth, deleteFavoritProductUser);
 
 // user purchased API 
-Route.post('/puchased/masuk-keranjang',  AuthMiddleware.checkAuth,insertPurchased);
+Route.post('/purchased/masuk-keranjang',  AuthMiddleware.checkAuth,insertPurchased);
 Route.get('/purchased/keranjang',  AuthMiddleware.checkAuth,getKeranjang);
 Route.post('/purchased/keranjang/:id/tambah',  AuthMiddleware.checkAuth,tambahSatuBarang);
 Route.delete('/purchased/keranjang/:id/hapus',  AuthMiddleware.checkAuth,hapusSatuBarang);

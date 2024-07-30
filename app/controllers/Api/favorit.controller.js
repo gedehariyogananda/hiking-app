@@ -93,10 +93,11 @@ const getFavoritProductUser = async (req, res) => {
 
 const deleteFavoritProductUser = async (req, res) => {
     const id = req.userData.id;
-    const { product_id } = req.body;
+    const idProduct = req.params.id;
+    // const { product_id } = req.body;
     
     try {
-        const allFavorit = await Favorit.find({ user_id : id} && { product_id : product_id });
+        const allFavorit = await Favorit.find({ user_id : id} && { product_id : idProduct });
 
         if(allFavorit.length == 0){
             return res.status(400).json({
@@ -105,7 +106,7 @@ const deleteFavoritProductUser = async (req, res) => {
             });
         }
 
-        const deleteFavorit = await Favorit.deleteOne({user_id : id} && {product_id : product_id});
+        const deleteFavorit = await Favorit.deleteOne({user_id : id} && {product_id : idProduct});
 
         if(deleteFavorit){
             return res.status(200).json({

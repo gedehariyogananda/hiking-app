@@ -7,7 +7,15 @@ const insertPurchased = async (req, res) => {
     const { product_id, start_borrow_purchased, end_borrow_purchased } = req.body;
 
     try {
-        const productInit = await Product.findOne({ id: product_id });
+        const productInit = await Product.findById({ _id: product_id });
+        
+        if(!productInit){
+            return res.status(404).json({
+                success: false,
+                message: "product not found"
+            });
+        }
+
         const priceProductInisiate = productInit.priceday_product;
 
         // selisih hari pinjam
@@ -21,9 +29,9 @@ const insertPurchased = async (req, res) => {
             product_id: product_id,
             start_borrow_purchased: start_borrow_purchased,
             end_borrow_purchased: end_borrow_purchased,
-            result_price_purchased: formatPrices(initPrice),
+            result_price_purchased: initPrice,
             status_purchased: "belum_submit",
-            checkout: false,
+            checkout: 0,
             attemp_purchased: "belum_disetujui"
         });
 
@@ -37,7 +45,17 @@ const insertPurchased = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "success add purchased",
-            data: insertPurchased
+            data: {
+                id: insertPurchased.id,
+                product_id: insertPurchased.product_id,
+                name_product: productInit.name_product,
+                image_product: productInit.image_product,
+                start_borrow_purchased: insertPurchased.start_borrow_purchased,
+                end_borrow_purchased: insertPurchased.end_borrow_purchased,
+                result_price_purchased: insertPurchased.result_price_purchased,
+                status_purchased: insertPurchased.status_purchased,
+                attemp_purchased: insertPurchased.attemp_purchased
+            }
         });
         
     } catch (err) {
@@ -51,43 +69,48 @@ const insertPurchased = async (req, res) => {
 
 const getKeranjang = async (req, res) => {
     const id = req.userData.id;
-    const userPuchased = await UserPurchased.find({ user_id: id, status_purchased: 'belum-submit' });
+    const userPurchased = await UserPurchased.find({ user_id: id, status_purchased: 'belum_submit' });
+    const productData = await Product.find();
 
     try {
-
-        // looping data userPurchased, cari product_id yang sama 
         const data = [];
-        
-        for (let i = 0; i < userPuchased.length; i++) {
-            const orderanSama = false;
+        let orderanSama = false;
 
-            for (let j = 0; j < data.length; j++) {
-                if (userPuchased[i].product_id == data[j].product_id && UserPurchased['start_borrow_purchased'] == data[j].start_borrow_purchased && UserPurchased['end_borrow_purchased'] == data[j].end_borrow_purchased)  {
+        for (let i = 0; i < userPurchased.length; i++) {
+            const purchase = userPurchased[i];
+            let totalBarangBeli = 1;
+
+            for (let k = 0; k < data.length; k++) {
+                if (data[k].product_id === purchase.product_id) {
                     orderanSama = true;
+                    data[k].total_barang_beli += 1;
+                    data[k].result_price_purchased = data[k].total_barang_beli * purchase.result_price_purchased;
                     break;
                 }
             }
 
             if (!orderanSama) {
-                const initBarangBeli = await UserPurchased.find({ product_id: userPuchased[i].product_id, user_id: id, status_purchased: 'belum-submit' });
-                const totalBarangBeli = initBarangBeli.length;
-
-                data.push({
-                    id: userPuchased[i].id,
-                    product_id: userPuchased[i].product_id,
-                    name_product: userPuchased[i].name_product,
-                    image_product: userPuchased[i].image_product,
-                    start_borrow_purchased: userPuchased[i].start_borrow_purchased,
-                    end_borrow_purchased: userPuchased[i].end_borrow_purchased,
-                    result_price_purchased: formatPrices.replaceFormatRp(userPuchased[i].result_price_purchased) * totalBarangBeli,
-                    total_barang_beli: totalBarangBeli,
-                    status_purchased: userPuchased[i].status_purchased,
-                    attemp_purchased: userPuchased[i].attemp_purchased
-                });
+                const product = productData.find(p => p.id == purchase.product_id);
+                if (product) {
+                    data.push({
+                        id: purchase.id,
+                        product_id: product.id,
+                        name_product: product.name_product,
+                        image_product: product.image_product,
+                        start_borrow_purchased: purchase.start_borrow_purchased,
+                        end_borrow_purchased: purchase.end_borrow_purchased,
+                        result_price_purchased: purchase.result_price_purchased,
+                        status_purchased: purchase.status_purchased,
+                        attemp_purchased: purchase.attemp_purchased,
+                        total_barang_beli: totalBarangBeli
+                    });
+                }
+            } else {
+                orderanSama = false;
             }
         }
 
-        if(data.length > 0){
+        if (data.length > 0) {
             return res.status(200).json({
                 success: true,
                 message: "Success get data",
@@ -99,23 +122,23 @@ const getKeranjang = async (req, res) => {
             success: false,
             message: "Failed to get data",
         });
-            
+
     } catch (err) {
         return res.status(500).json({
             success: false,
             message: "Failed to get data",
             error: err
-        });    
+        });
     }
-
 }
+
 
 const tambahSatuBarang = async (req, res) => {
     const id = req.userData.id;
     const idPurchased = req.params.id;
 
     try {
-        const keranjang = await UserPurchased.findOne( {id : idPurchased} );
+        const keranjang = await UserPurchased.findOne( {_id : idPurchased} );
 
         if(!keranjang){
             return res.status(404).json({
@@ -163,7 +186,7 @@ const hapusSatuBarang = async (req, res) => {
     const idPurchased = req.params.id;
 
     try {
-        const keranjang = await UserPurchased.findOne( {id : idPurchased} );
+        const keranjang = await UserPurchased.findOne( {_id : idPurchased} );
 
         if(!keranjang){
             return res.status(404).json({
@@ -172,7 +195,7 @@ const hapusSatuBarang = async (req, res) => {
             });
         }
 
-        const hapusKeranjang = await UserPurchased.deleteOne({ id : idPurchased });
+        const hapusKeranjang = await UserPurchased.deleteOne({ _id : idPurchased });
 
         if(hapusKeranjang){
             return res.status(200).json({
@@ -199,7 +222,7 @@ const hapusSatuBarang = async (req, res) => {
 
 const checkoutKeranjang = async (req, res) => {
     const id = req.userData.id;
-    const keranjang = await UserPurchased.find({user_id : id});
+    const keranjang = await UserPurchased.find({user_id : id, status_purchased : 'belum_submit'});
     
     try {
 
@@ -214,7 +237,7 @@ const checkoutKeranjang = async (req, res) => {
         const newValueCheckout = valueCheckout + 1;
 
         // setelah berhasil, update status nya menjadi sudah submit dan checkout menjadi newValueCheckout 
-        const updateCheckout = await UserPurchased.updateMany({ user_id : id }, { status_purchased: "sudah-submit", checkout: newValueCheckout });
+        const updateCheckout = await UserPurchased.updateMany({ user_id : id }, { status_purchased: "sudah_submit", checkout: newValueCheckout });
 
         // if keranjang kosong 
         if(!updateCheckout){
@@ -343,24 +366,29 @@ const getCheckoutTotal = async (req, res) => {
     try {
         const userPurchased = await UserPurchased.find( {user_id : id, status_purchased: 'belum_submit' });
 
-        if(!userPurchased){
+        if(userPurchased.length === 0){
             return res.status(404).json({
                 success: false,
                 message: "data not found"
             });
         }
 
-        const totalHarga = 0;
+        let totalHarga = 0;
 
         for (let i = 0; i < userPurchased.length; i++) {
-            const priceInit = formatPrices.replaceFormatRp(userPurchased[i].result_price_purchased);
-            totalHarga += priceInit;
+            const priceInit = parseFloat(userPurchased[i].result_price_purchased);
+
+            if (!isNaN(priceInit)) {
+                totalHarga += priceInit;
+            } else {
+                console.error(`Invalid price: ${userPurchased[i].result_price_purchased}`);
+            }
         }
 
         return res.status(200).json({
             success: true,
             message: "success get total harga",
-            data: formatPrices(totalHarga)
+            data: totalHarga
         });
         
     } catch (err) {
@@ -378,8 +406,8 @@ const getRiwayatPembelianUser = async (req, res) => {
     const id = req.userData.id;
 
     try {
-        const userPurchasedStatusSudahSubmit = await UserPurchased.find({ user_id : id, status_purchased: 'sudah_submit' }. sort({checkout: 'desc'}));
-
+        const userPurchasedStatusSudahSubmit = await UserPurchased.find({ user_id : id, status_purchased: 'sudah_submit'});
+        console.log(userPurchasedStatusSudahSubmit);
         if(!userPurchasedStatusSudahSubmit){
             return res.status(404).json({
                 success: false,
@@ -387,7 +415,6 @@ const getRiwayatPembelianUser = async (req, res) => {
             });
         }
 
-        // map data dengan table product 
         const mappedData = [];
         for(let i = 0; i < userPurchasedStatusSudahSubmit.length; i++){
             const productData = await Product.findById(userPurchasedStatusSudahSubmit[i].product_id);
